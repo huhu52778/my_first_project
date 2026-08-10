@@ -23,7 +23,7 @@ st.title("💰 每日收支管家")
 
 data = load_data()
 
-# ---------- 侧边栏：添加记录 ----------
+# ---------- 侧边栏：新增记录 ----------
 with st.sidebar:
     st.header("➕ 新增记录")
     t_type = st.radio("类型", ["收入", "支出"])
@@ -44,7 +44,7 @@ with st.sidebar:
         st.success("✅ 记录已保存！")
         st.rerun()
 
-# ---------- 主界面：查看汇总 ----------
+# ---------- 主界面 ----------
 tab1, tab2, tab3 = st.tabs(["📊 今日概览", "📆 每日汇总", "📈 历史总览"])
 
 with tab1:
@@ -95,3 +95,27 @@ with tab3:
     st.metric("累计总收入", f"{total_income:.2f} 元")
     st.metric("累计总支出", f"{total_expense:.2f} 元")
     st.metric("当前总余额", f"{total_balance:.2f} 元")
+    
+    # ---------- 🆕 新增删除功能（就在这里） ----------
+    st.divider()
+    st.subheader("🗑️ 删除指定记录")
+    transactions = data["transactions"]
+    if not transactions:
+        st.info("暂无记录可删除")
+    else:
+        # 倒序显示（最新的在上面）
+        for i in range(len(transactions) - 1, -1, -1):
+            t = transactions[i]
+            col1, col2 = st.columns([4, 1])
+            with col1:
+                tag = "💰" if t["type"] == "income" else "💸"
+                cat = f"[{t.get('category', '')}]" if t.get('category') else ""
+                note = f"({t.get('note', '')})" if t.get('note') else ""
+                st.write(f"{tag} {t['date']} {t['amount']:.2f} 元 {cat} {note}")
+            with col2:
+                # 删除按钮
+                if st.button("❌ 删除", key=f"del_{i}"):
+                    data["transactions"].pop(i)
+                    save_data(data)
+                    st.success("✅ 已删除该记录！")
+                    st.rerun()
